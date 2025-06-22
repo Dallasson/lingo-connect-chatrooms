@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
+import { ArrowLeft } from 'lucide-react';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -57,25 +57,40 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-gradient-to-br from-lingo-500 to-lingo-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-lg">LC</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-lingo-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-1/3 w-96 h-96 bg-lingo-200/20 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 right-1/3 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl -z-10"></div>
+      
+      {/* Back button */}
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 flex items-center space-x-2 text-slate-600 hover:text-lingo-600 transition-colors group"
+      >
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back home</span>
+      </Link>
+
+      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-0 shadow-2xl">
+        <CardHeader className="text-center pb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-lingo-500 to-lingo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <span className="text-white font-bold text-xl">LC</span>
           </div>
-          <CardTitle className="text-2xl">Join LingoConnect</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+            Join LingoConnect
+          </CardTitle>
+          <CardDescription className="text-lg text-slate-600">
             Create your account and start practicing languages
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <Button 
             variant="outline" 
-            className="w-full"
+            className="w-full py-6 text-base border-2 hover:border-lingo-300 hover:bg-lingo-50 transition-all duration-300 rounded-xl"
             onClick={handleGoogleSignup}
             disabled={isLoading}
           >
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+            <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -99,13 +114,13 @@ const Signup = () => {
           <div className="relative">
             <Separator />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="bg-white px-2 text-sm text-muted-foreground">or</span>
+              <span className="bg-white px-4 text-sm text-slate-500">or</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -113,11 +128,12 @@ const Signup = () => {
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 required
+                className="h-12 text-base rounded-xl border-2 focus:border-lingo-400"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-base font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -125,22 +141,24 @@ const Signup = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 required
+                className="h-12 text-base rounded-xl border-2 focus:border-lingo-400"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number (Optional)</Label>
+              <Label htmlFor="phone" className="text-base font-medium">Phone Number (Optional)</Label>
               <Input
                 id="phone"
                 type="tel"
                 placeholder="+1 (555) 123-4567"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
+                className="h-12 text-base rounded-xl border-2 focus:border-lingo-400"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-base font-medium">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -148,11 +166,12 @@ const Signup = () => {
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 required
+                className="h-12 text-base rounded-xl border-2 focus:border-lingo-400"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-base font-medium">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -160,22 +179,23 @@ const Signup = () => {
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                 required
+                className="h-12 text-base rounded-xl border-2 focus:border-lingo-400"
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <Checkbox
                 id="terms"
                 checked={formData.agreeToTerms}
                 onCheckedChange={(checked) => handleInputChange('agreeToTerms', checked as boolean)}
               />
-              <Label htmlFor="terms" className="text-sm">
+              <Label htmlFor="terms" className="text-sm leading-relaxed">
                 I agree to the{' '}
-                <Link to="/terms" className="text-lingo-600 hover:text-lingo-700 hover:underline">
+                <Link to="/terms" className="text-lingo-600 hover:text-lingo-700 hover:underline font-semibold">
                   Terms of Service
                 </Link>
                 {' '}and{' '}
-                <Link to="/privacy" className="text-lingo-600 hover:text-lingo-700 hover:underline">
+                <Link to="/privacy" className="text-lingo-600 hover:text-lingo-700 hover:underline font-semibold">
                   Privacy Policy
                 </Link>
               </Label>
@@ -183,19 +203,19 @@ const Signup = () => {
 
             <Button 
               type="submit" 
-              className="w-full bg-lingo-500 hover:bg-lingo-600"
+              className="w-full h-12 bg-gradient-to-r from-lingo-500 to-lingo-600 hover:from-lingo-600 hover:to-lingo-700 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               disabled={isLoading}
             >
               {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
 
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="text-center pt-4">
+            <p className="text-slate-600">
               Already have an account?{' '}
               <Link 
                 to="/login" 
-                className="text-lingo-600 hover:text-lingo-700 hover:underline font-medium"
+                className="text-lingo-600 hover:text-lingo-700 hover:underline font-semibold transition-colors"
               >
                 Sign in
               </Link>
