@@ -9,6 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      followers: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followers_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followers_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      languages: {
+        Row: {
+          code: string
+          created_at: string
+          flag_emoji: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          flag_emoji?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          flag_emoji?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       Lingo: {
         Row: {
           created_at: string
@@ -23,6 +83,212 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          is_read: boolean
+          message_type: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      room_participants: {
+        Row: {
+          id: string
+          is_muted: boolean
+          joined_at: string
+          role: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          role?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          role?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          description: string | null
+          host_id: string
+          id: string
+          is_active: boolean
+          language_id: string
+          max_participants: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          host_id: string
+          id?: string
+          is_active?: boolean
+          language_id: string
+          max_participants?: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          language_id?: string
+          max_participants?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_language_id_fkey"
+            columns: ["language_id"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          allow_messages_from_strangers: boolean
+          created_at: string
+          email_notifications: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_messages_from_strangers?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_messages_from_strangers?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

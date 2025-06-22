@@ -1,12 +1,13 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,14 @@ const Signup = () => {
     agreeToTerms: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp, signInWithGoogle, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -27,30 +36,24 @@ const Signup = () => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
       return;
     }
 
     if (!formData.agreeToTerms) {
-      alert('Please agree to the terms and conditions');
       return;
     }
 
     setIsLoading(true);
     
-    // TODO: Implement registration with Supabase
-    console.log('Registration attempt:', formData);
+    const { error } = await signUp(formData.email, formData.password, formData.name);
     
-    setTimeout(() => {
-      setIsLoading(false);
-      alert('Registration functionality will be implemented with Supabase authentication!');
-    }, 1000);
+    setIsLoading(false);
   };
 
-  const handleGoogleSignup = () => {
-    // TODO: Implement Google authentication with Supabase
-    console.log('Google signup attempt');
-    alert('Google authentication will be implemented with Supabase!');
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    setIsLoading(false);
   };
 
   return (
@@ -70,6 +73,7 @@ const Signup = () => {
             variant="outline" 
             className="w-full"
             onClick={handleGoogleSignup}
+            disabled={isLoading}
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path

@@ -1,34 +1,43 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signInWithGoogle, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement authentication with Supabase
-    console.log('Login attempt:', email, password);
+    const { error } = await signIn(email, password);
     
-    setTimeout(() => {
-      setIsLoading(false);
-      alert('Login functionality will be implemented with Supabase authentication!');
-    }, 1000);
+    setIsLoading(false);
+    
+    if (!error) {
+      navigate('/');
+    }
   };
 
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google authentication with Supabase
-    console.log('Google login attempt');
-    alert('Google authentication will be implemented with Supabase!');
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    setIsLoading(false);
   };
 
   return (
@@ -48,6 +57,7 @@ const Login = () => {
             variant="outline" 
             className="w-full"
             onClick={handleGoogleLogin}
+            disabled={isLoading}
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -111,12 +121,6 @@ const Login = () => {
           </form>
 
           <div className="text-center space-y-2">
-            <Link 
-              to="/forgot-password" 
-              className="text-sm text-lingo-600 hover:text-lingo-700 hover:underline"
-            >
-              Forgot your password?
-            </Link>
             <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <Link 
