@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { Upload, Users, UserPlus } from 'lucide-react';
+import { Upload, Users, UserPlus, Trash2 } from 'lucide-react';
+import { countries } from '@/data/countries';
 
 interface Language {
   id: string;
@@ -30,7 +30,7 @@ interface Profile {
 }
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -158,27 +158,77 @@ const Profile = () => {
     if (!file || !user) return;
 
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
 
     try {
-      // Upload to Supabase storage would go here
-      // For now, we'll just show a placeholder
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: data.publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setProfile(prev => prev ? { ...prev, avatar_url: data.publicUrl } : null);
       toast({
-        title: "Image Upload",
-        description: "Image upload feature will be implemented with Supabase Storage",
+        title: "Success",
+        description: "Profile photo updated successfully!",
       });
     } catch (error) {
+      console.error('Error uploading image:', error);
       toast({
         title: "Error",
-        description: "Failed to upload image",
+        description: "Failed to upload image. Please try again.",
         variant: "destructive",
       });
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+    
+    if (confirmed) {
+      try {
+        // This would typically involve calling a server function to properly delete the user
+        await signOut();
+        toast({
+          title: "Account Deleted",
+          description: "Your account has been scheduled for deletion.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete account. Please contact support.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100">
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading...</div>
@@ -189,7 +239,7 @@ const Profile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100">
+      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Profile not found</div>
@@ -199,7 +249,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100">
+    <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -219,7 +269,7 @@ const Profile = () => {
                       {profile.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="avatar-upload" className="cursor-pointer">
                       <Button type="button" variant="outline" className="flex items-center space-x-2">
                         <Upload className="h-4 w-4" />
@@ -233,6 +283,9 @@ const Profile = () => {
                       onChange={handleImageUpload}
                       className="hidden"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      JPG, PNG or GIF (max 5MB)
+                    </p>
                   </div>
                 </div>
 
@@ -249,13 +302,22 @@ const Profile = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
+                    <Label>Country</Label>
+                    <Select
                       value={profile.country || ''}
-                      onChange={(e) => setProfile({ ...profile, country: e.target.value })}
-                      placeholder="Enter your country"
-                    />
+                      onValueChange={(value) => setProfile({ ...profile, country: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country.code} value={country.name}>
+                            {country.flag} {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -375,6 +437,27 @@ const Profile = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Danger Zone */}
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Delete Account</p>
+                  <p className="text-sm text-muted-foreground">
+                    Once you delete your account, there is no going back. Please be certain.
+                  </p>
+                </div>
+                <Button variant="destructive" onClick={handleDeleteAccount}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

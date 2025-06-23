@@ -16,22 +16,22 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white/90 backdrop-blur-sm border-b border-elegant-200 sticky top-0 z-50 dark:bg-elegant-900/90 dark:border-elegant-700">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-lingo-500 to-lingo-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-elegant-600 to-elegant-700 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">LC</span>
             </div>
-            <span className="font-bold text-xl text-gray-900">LingoConnect</span>
+            <span className="font-bold text-xl text-elegant-900 dark:text-elegant-100">LingoConnect</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/rooms" className="text-gray-600 hover:text-lingo-600 font-medium">
+            <Link to="/rooms" className="text-elegant-600 hover:text-elegant-800 font-medium dark:text-elegant-300 dark:hover:text-elegant-100">
               Rooms
             </Link>
-            <Link to="/privacy-policy" className="text-gray-600 hover:text-lingo-600 font-medium">
-              Privacy
+            <Link to="/contact" className="text-elegant-600 hover:text-elegant-800 font-medium dark:text-elegant-300 dark:hover:text-elegant-100">
+              Contact
             </Link>
           </nav>
 

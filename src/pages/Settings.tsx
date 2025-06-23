@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { Moon, Sun, Mail, MessageSquare } from 'lucide-react';
+import { Moon, Sun, Mail, MessageSquare, Shield } from 'lucide-react';
 
 interface UserSettings {
   allow_messages_from_strangers: boolean;
@@ -29,6 +29,12 @@ const Settings = () => {
   useEffect(() => {
     if (user) {
       fetchSettings();
+    }
+    // Check if dark mode is enabled from localStorage
+    const isDarkMode = localStorage.getItem('theme') === 'dark';
+    setDarkMode(isDarkMode);
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
     }
   }, [user]);
 
@@ -80,11 +86,20 @@ const Settings = () => {
   };
 
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // In a real implementation, this would toggle the theme
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+    
     toast({
-      title: "Theme",
-      description: `${darkMode ? 'Light' : 'Dark'} mode will be implemented in future updates`,
+      title: "Theme Updated",
+      description: `Switched to ${newDarkMode ? 'dark' : 'light'} mode`,
     });
   };
 
@@ -100,7 +115,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100">
+    <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100 dark:from-elegant-900 dark:via-elegant-800 dark:to-elegant-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -111,7 +126,7 @@ const Settings = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5" />
+                <Shield className="h-5 w-5" />
                 <span>Privacy Settings</span>
               </CardTitle>
             </CardHeader>
