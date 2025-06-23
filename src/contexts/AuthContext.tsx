@@ -38,6 +38,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle email verification
+        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+          // Check if this is coming from email verification
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('type') === 'signup' || window.location.hash.includes('type=signup')) {
+            window.location.href = '/email-verified';
+          }
+        }
       }
     );
 
@@ -53,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/email-verified`;
       const { error } = await supabase.auth.signUp({
         email,
         password,

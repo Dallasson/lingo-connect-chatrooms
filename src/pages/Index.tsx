@@ -6,14 +6,36 @@ import Header from '@/components/Header';
 import LanguageSelector from '@/components/LanguageSelector';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Users, Globe } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedLanguage, setSelectedLanguage] = useState<{ code: string; name: string } | null>(null);
 
   const handleLanguageSelect = (language: { code: string; name: string }) => {
     setSelectedLanguage(language);
     navigate(`/rooms?language=${language.code}`);
+  };
+
+  const handleStartSpeaking = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      navigate('/rooms');
+    }
+  };
+
+  const handleBrowseRooms = () => {
+    navigate('/rooms');
+  };
+
+  const handleGetStarted = () => {
+    if (!user) {
+      navigate('/signup');
+    } else {
+      navigate('/rooms');
+    }
   };
 
   return (
@@ -50,6 +72,7 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Button 
                 size="lg" 
+                onClick={handleStartSpeaking}
                 className="bg-gradient-to-r from-lingo-500 to-lingo-600 hover:from-lingo-600 hover:to-lingo-700 text-white text-lg px-10 py-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group"
               >
                 Start Speaking Now
@@ -58,6 +81,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
+                onClick={handleBrowseRooms}
                 className="text-lg px-10 py-6 rounded-2xl border-2 border-slate-200 hover:border-lingo-300 hover:bg-lingo-50 transition-all duration-300"
               >
                 Browse Rooms
@@ -144,6 +168,7 @@ const Index = () => {
               <p className="text-xl mb-8 text-lingo-100">Join thousands of language learners already practicing daily</p>
               <Button 
                 size="lg" 
+                onClick={handleGetStarted}
                 className="bg-white text-lingo-600 hover:bg-lingo-50 text-lg px-10 py-6 rounded-2xl font-semibold transition-all duration-300 hover:scale-105 shadow-xl"
               >
                 Get Started Free
