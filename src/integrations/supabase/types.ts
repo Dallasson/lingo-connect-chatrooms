@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          participant_1_id: string
+          participant_2_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          participant_1_id: string
+          participant_2_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          participant_1_id?: string
+          participant_2_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_participant_1_id_fkey"
+            columns: ["participant_1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_2_id_fkey"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followers: {
         Row: {
           created_at: string
@@ -87,40 +126,43 @@ export type Database = {
       messages: {
         Row: {
           content: string | null
+          conversation_id: string | null
           created_at: string
           file_url: string | null
+          gif_url: string | null
           id: string
           is_read: boolean
           message_type: string
-          recipient_id: string
           sender_id: string
         }
         Insert: {
           content?: string | null
+          conversation_id?: string | null
           created_at?: string
           file_url?: string | null
+          gif_url?: string | null
           id?: string
           is_read?: boolean
           message_type?: string
-          recipient_id: string
           sender_id: string
         }
         Update: {
           content?: string | null
+          conversation_id?: string | null
           created_at?: string
           file_url?: string | null
+          gif_url?: string | null
           id?: string
           is_read?: boolean
           message_type?: string
-          recipient_id?: string
           sender_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "messages_recipient_id_fkey"
-            columns: ["recipient_id"]
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
           {
@@ -135,32 +177,59 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birthday: string | null
+          country: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          learning_language_id: string | null
+          native_language_id: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          birthday?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          learning_language_id?: string | null
+          native_language_id?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          birthday?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          learning_language_id?: string | null
+          native_language_id?: string | null
           phone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_learning_language_id_fkey"
+            columns: ["learning_language_id"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_native_language_id_fkey"
+            columns: ["native_language_id"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_participants: {
         Row: {
@@ -251,6 +320,45 @@ export type Database = {
             columns: ["language_id"]
             isOneToOne: false
             referencedRelation: "languages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_blocked: {
+        Row: {
+          blocked_until: string
+          created_at: string
+          id: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          blocked_until: string
+          created_at?: string
+          id?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          blocked_until?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocked_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocked_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
