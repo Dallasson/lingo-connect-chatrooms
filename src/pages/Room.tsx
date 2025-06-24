@@ -13,6 +13,7 @@ import { Mic, MicOff, Users, Settings, LogOut } from 'lucide-react';
 import Header from '@/components/Header';
 import RoomControls from '@/components/RoomControls';
 import RoomChat from '@/components/RoomChat';
+import RoomSettingsDialog from '@/components/RoomSettingsDialog';
 import { countries } from '@/data/countries';
 
 interface RoomData {
@@ -20,6 +21,8 @@ interface RoomData {
   name: string;
   description?: string;
   host_id: string;
+  language_id: string;
+  max_participants: number;
   language: {
     name: string;
     flag_emoji: string;
@@ -34,10 +37,12 @@ interface RoomData {
 interface Participant {
   user_id: string;
   role: 'host' | 'co_host' | 'speaker' | 'audience';
+  is_muted: boolean;
   profiles: {
     full_name: string;
     avatar_url?: string;
     country?: string;
+    email?: string;
   };
 }
 
@@ -50,6 +55,7 @@ const Room = () => {
   const [room, setRoom] = useState<RoomData | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   const { isMuted, toggleMute } = useWebRTC(roomId || '', user?.id || '');
 
@@ -86,12 +92,13 @@ const Room = () => {
       });
       navigate('/rooms');
     } else if (data) {
-      // Transform the data to match RoomData interface
       const roomData: RoomData = {
         id: data.id,
         name: data.name,
         description: data.description,
         host_id: data.host_id,
+        language_id: data.language_id,
+        max_participants: data.max_participants,
         language: {
           name: data.languages.name,
           flag_emoji: data.languages.flag_emoji,
@@ -113,21 +120,23 @@ const Room = () => {
       .select(`
         user_id,
         role,
-        profiles (full_name, avatar_url, country)
+        is_muted,
+        profiles (full_name, avatar_url, country, email)
       `)
       .eq('room_id', roomId);
 
     if (error) {
       console.error('Error fetching participants:', error);
     } else if (data) {
-      // Transform and type-cast the participants data
       const typedParticipants: Participant[] = data.map(p => ({
         user_id: p.user_id,
         role: p.role as 'host' | 'co_host' | 'speaker' | 'audience',
+        is_muted: p.is_muted,
         profiles: {
           full_name: p.profiles?.full_name || 'Unknown',
           avatar_url: p.profiles?.avatar_url,
           country: p.profiles?.country,
+          email: p.profiles?.email,
         }
       }));
       setParticipants(typedParticipants);
@@ -185,6 +194,11 @@ const Room = () => {
     navigate('/rooms');
   };
 
+  const handleUpdateRoom = () => {
+    fetchRoomData();
+    setShowSettings(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -233,10 +247,15 @@ const Room = () => {
               <div className="flex items-center space-x-2">
                 <Button variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-700">
                   <Users className="h-4 w-4 mr-2" />
-                  {participants.length}
+                  {participants.length}/{room.max_participants}
                 </Button>
                 {isHost && (
-                  <Button variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-700">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-slate-600 text-white hover:bg-slate-700"
+                    onClick={() => setShowSettings(true)}
+                  >
                     <Settings className="h-4 w-4" />
                   </Button>
                 )}
@@ -257,7 +276,7 @@ const Room = () => {
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-white">Speakers</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Array.from({ length: 8 }, (_, index) => {
+                  {Array.from({ length: Math.min(8, room.max_participants / 2) }, (_, index) => {
                     const speaker = speakers[index];
                     return (
                       <div key={index} className="flex flex-col items-center p-4 border-2 border-dashed border-slate-600 rounded-lg">
@@ -273,6 +292,11 @@ const Room = () => {
                               <div className="absolute -bottom-1 -left-1 text-sm">
                                 {getCountryFlag(speaker.profiles.country)}
                               </div>
+                              {speaker.is_muted && (
+                                <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+                                  <MicOff className="h-3 w-3 text-white" />
+                                </div>
+                              )}
                             </div>
                             <p className="text-sm font-medium mt-2 text-center text-white">
                               {speaker.profiles.full_name}
@@ -296,7 +320,7 @@ const Room = () => {
               </CardContent>
             </Card>
 
-            {/* Audience Section */}
+            {/* Audience Section - Only show real participants */}
             <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-white">Audience ({audience.length})</h2>
@@ -313,6 +337,11 @@ const Room = () => {
                         <div className="absolute -bottom-1 -left-1 text-xs">
                           {getCountryFlag(member.profiles.country)}
                         </div>
+                        {member.is_muted && (
+                          <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5">
+                            <MicOff className="h-2 w-2 text-white" />
+                          </div>
+                        )}
                       </div>
                       <span className="text-xs text-white text-center max-w-[60px] truncate">
                         {member.profiles.full_name}
@@ -354,6 +383,22 @@ const Room = () => {
           </div>
         </div>
       </div>
+
+      {/* Room Settings Dialog */}
+      {room && (
+        <RoomSettingsDialog
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          room={{
+            id: room.id,
+            name: room.name,
+            description: room.description,
+            language_id: room.language_id,
+            max_participants: room.max_participants
+          }}
+          onUpdate={handleUpdateRoom}
+        />
+      )}
     </div>
   );
 };

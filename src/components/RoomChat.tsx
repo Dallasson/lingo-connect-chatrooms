@@ -54,7 +54,7 @@ const RoomChat = ({ roomId }: RoomChatProps) => {
         table: 'room_messages',
         filter: `room_id=eq.${roomId}`
       }, (payload) => {
-        console.log('New message:', payload);
+        console.log('New message received:', payload);
         fetchMessages(); // Refetch to get profile data
       })
       .subscribe();
@@ -69,32 +69,36 @@ const RoomChat = ({ roomId }: RoomChatProps) => {
   }, [messages]);
 
   const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('room_messages')
-      .select(`
-        *,
-        profiles!sender_id (full_name, avatar_url)
-      `)
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('room_messages')
+        .select(`
+          *,
+          profiles!room_messages_sender_id_fkey (full_name, avatar_url)
+        `)
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching messages:', error);
-    } else {
-      // Transform the data to match our Message interface
-      const transformedMessages = data?.map(msg => ({
-        id: msg.id,
-        content: msg.content,
-        sender_id: msg.sender_id,
-        room_id: msg.room_id,
-        message_type: msg.message_type as 'text' | 'image' | 'gif',
-        created_at: msg.created_at,
-        profiles: {
-          full_name: msg.profiles?.full_name || 'Unknown User',
-          avatar_url: msg.profiles?.avatar_url
-        }
-      })) || [];
-      setMessages(transformedMessages);
+      if (error) {
+        console.error('Error fetching messages:', error);
+      } else if (data) {
+        // Transform the data to match our Message interface
+        const transformedMessages = data.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender_id: msg.sender_id,
+          room_id: msg.room_id,
+          message_type: msg.message_type as 'text' | 'image' | 'gif',
+          created_at: msg.created_at,
+          profiles: {
+            full_name: msg.profiles?.full_name || 'Unknown User',
+            avatar_url: msg.profiles?.avatar_url
+          }
+        }));
+        setMessages(transformedMessages);
+      }
+    } catch (error) {
+      console.error('Error in fetchMessages:', error);
     }
   };
 
@@ -105,19 +109,24 @@ const RoomChat = ({ roomId }: RoomChatProps) => {
   const sendMessage = async (content: string, type: 'text' | 'image' | 'gif' = 'text') => {
     if (!user || !content.trim()) return;
 
-    const { error } = await supabase
-      .from('room_messages')
-      .insert({
-        room_id: roomId,
-        sender_id: user.id,
-        content: content.trim(),
-        message_type: type
-      });
+    try {
+      const { error } = await supabase
+        .from('room_messages')
+        .insert({
+          room_id: roomId,
+          sender_id: user.id,
+          content: content.trim(),
+          message_type: type
+        });
 
-    if (error) {
-      console.error('Error sending message:', error);
-    } else {
-      setNewMessage('');
+      if (error) {
+        console.error('Error sending message:', error);
+      } else {
+        setNewMessage('');
+        console.log('Message sent successfully');
+      }
+    } catch (error) {
+      console.error('Error in sendMessage:', error);
     }
   };
 
