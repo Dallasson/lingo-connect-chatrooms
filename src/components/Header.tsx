@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Settings, LogOut, MessageCircle, Users } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
+import { User, Settings, LogOut, MessageCircle, Users, Search } from 'lucide-react';
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -28,10 +30,13 @@ const Header = () => {
 
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/rooms" className="text-slate-300 hover:text-white font-medium">
-              Rooms
+              {t('rooms')}
+            </Link>
+            <Link to="/find-users" className="text-slate-300 hover:text-white font-medium">
+              {t('find_users')}
             </Link>
             <Link to="/contact" className="text-slate-300 hover:text-white font-medium">
-              Contact
+              {t('contact')}
             </Link>
           </nav>
 
@@ -51,35 +56,39 @@ const Header = () => {
                 <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>
                   <DropdownMenuItem onClick={() => navigate('/profile')} className="text-white hover:bg-slate-700">
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>{t('profile')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/messages')} className="text-white hover:bg-slate-700">
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    <span>Messages</span>
+                    <span>{t('messages')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/rooms')} className="text-white hover:bg-slate-700">
                     <Users className="mr-2 h-4 w-4" />
-                    <span>Rooms</span>
+                    <span>{t('rooms')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/find-users')} className="text-white hover:bg-slate-700">
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>{t('find_users')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-slate-700" />
                   <DropdownMenuItem onClick={() => navigate('/settings')} className="text-white hover:bg-slate-700">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t('settings')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-slate-700" />
                   <DropdownMenuItem onClick={handleSignOut} className="text-white hover:bg-slate-700">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>{t('logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/login">
-                  <Button variant="ghost" className="text-white hover:bg-slate-800">Sign In</Button>
+                  <Button variant="ghost" className="text-white hover:bg-slate-800">{t('sign_in')}</Button>
                 </Link>
                 <Link to="/signup">
-                  <Button className="bg-slate-700 hover:bg-slate-600 text-white">Get Started</Button>
+                  <Button className="bg-slate-700 hover:bg-slate-600 text-white">{t('get_started')}</Button>
                 </Link>
               </div>
             )}

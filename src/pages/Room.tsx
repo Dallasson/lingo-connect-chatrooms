@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useWebRTC } from '@/hooks/useWebRTC';
 import { Mic, MicOff, Users, Settings, LogOut } from 'lucide-react';
 import Header from '@/components/Header';
+import { countries } from '@/data/countries';
 
 interface RoomData {
   id: string;
@@ -45,8 +46,9 @@ const Room = () => {
   
   const [room, setRoom] = useState<RoomData | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [isMuted, setIsMuted] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  const { isMuted, toggleMute } = useWebRTC(roomId || '', user?.id || '');
 
   useEffect(() => {
     if (!user) {
@@ -57,6 +59,7 @@ const Room = () => {
     if (roomId) {
       fetchRoomData();
       fetchParticipants();
+      joinRoom();
     }
   }, [roomId, user]);
 
@@ -128,6 +131,33 @@ const Room = () => {
     }
   };
 
+  const joinRoom = async () => {
+    if (!user || !roomId) return;
+
+    const { data: existingParticipant } = await supabase
+      .from('room_participants')
+      .select('*')
+      .eq('room_id', roomId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (!existingParticipant) {
+      const { error } = await supabase
+        .from('room_participants')
+        .insert({
+          room_id: roomId,
+          user_id: user.id,
+          role: user.id === room?.host_id ? 'host' : 'audience'
+        });
+
+      if (error) {
+        console.error('Error joining room:', error);
+      } else {
+        fetchParticipants();
+      }
+    }
+  };
+
   const leaveRoom = async () => {
     const { error } = await supabase
       .from('room_participants')
@@ -142,9 +172,10 @@ const Room = () => {
     }
   };
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    // WebRTC implementation would go here
+  const getCountryFlag = (countryName?: string) => {
+    if (!countryName) return '🌍';
+    const country = countries.find(c => c.name === countryName);
+    return country?.flag || '🌍';
   };
 
   if (loading) {
@@ -216,7 +247,6 @@ const Room = () => {
           <CardContent className="p-6">
             <h2 className="text-lg font-semibold mb-4 text-white">Speakers</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Generate 8 speaker slots */}
               {Array.from({ length: 8 }, (_, index) => {
                 const speaker = speakers[index];
                 return (
@@ -230,11 +260,9 @@ const Room = () => {
                               {speaker.profiles.full_name?.charAt(0) || 'U'}
                             </AvatarFallback>
                           </Avatar>
-                          {speaker.profiles.country && (
-                            <div className="absolute -bottom-1 -left-1 text-sm">
-                              🌍
-                            </div>
-                          )}
+                          <div className="absolute -bottom-1 -left-1 text-sm">
+                            {getCountryFlag(speaker.profiles.country)}
+                          </div>
                         </div>
                         <p className="text-sm font-medium mt-2 text-center text-white">
                           {speaker.profiles.full_name}
@@ -264,21 +292,21 @@ const Room = () => {
             <h2 className="text-lg font-semibold mb-4 text-white">Audience ({audience.length})</h2>
             <div className="flex flex-wrap gap-3">
               {audience.map((member) => (
-                <div key={member.user_id} className="flex items-center space-x-2">
+                <div key={member.user_id} className="flex flex-col items-center space-y-1">
                   <div className="relative">
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-12 w-12">
                       <AvatarImage src={member.profiles.avatar_url} />
                       <AvatarFallback className="text-xs bg-slate-700 text-white">
                         {member.profiles.full_name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    {member.profiles.country && (
-                      <div className="absolute -bottom-1 -right-1 text-xs">
-                        🌍
-                      </div>
-                    )}
+                    <div className="absolute -bottom-1 -left-1 text-xs">
+                      {getCountryFlag(member.profiles.country)}
+                    </div>
                   </div>
-                  <span className="text-sm text-white">{member.profiles.full_name}</span>
+                  <span className="text-xs text-white text-center max-w-[60px] truncate">
+                    {member.profiles.full_name}
+                  </span>
                 </div>
               ))}
             </div>

@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/Header';
-import { Moon, Sun, Mail, Shield } from 'lucide-react';
+import { Moon, Sun, Mail, Shield, Globe, Palette } from 'lucide-react';
 
 interface UserSettings {
   allow_messages_from_strangers: boolean;
@@ -18,6 +20,7 @@ interface UserSettings {
 const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { currentLanguage, changeLanguage, t } = useLanguage();
   const [settings, setSettings] = useState<UserSettings>({
     allow_messages_from_strangers: true,
     email_notifications: true,
@@ -30,7 +33,6 @@ const Settings = () => {
     if (user) {
       fetchSettings();
     }
-    // Check if dark mode is enabled from localStorage
     const isDarkMode = localStorage.getItem('theme') === 'dark';
     setDarkMode(isDarkMode);
     if (isDarkMode) {
@@ -115,12 +117,69 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
+          <h1 className="text-3xl font-bold text-white">{t('settings')}</h1>
+
+          {/* Language Settings */}
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-white">
+                <Globe className="h-5 w-5" />
+                <span>Language / Idioma / Langue</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-white">Interface Language</Label>
+                  <p className="text-sm text-slate-400">
+                    Choose your preferred language for the interface
+                  </p>
+                </div>
+                <Select value={currentLanguage} onValueChange={changeLanguage}>
+                  <SelectTrigger className="w-40 bg-slate-700 border-slate-600 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600">
+                    <SelectItem value="en" className="text-white hover:bg-slate-600">🇺🇸 English</SelectItem>
+                    <SelectItem value="es" className="text-white hover:bg-slate-600">🇪🇸 Español</SelectItem>
+                    <SelectItem value="fr" className="text-white hover:bg-slate-600">🇫🇷 Français</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Appearance Settings */}
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-white">
+                <Palette className="h-5 w-5" />
+                <span>Appearance</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-white flex items-center space-x-2">
+                    {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                    <span>{t('dark_mode')}</span>
+                  </Label>
+                  <p className="text-sm text-slate-400">
+                    Switch between light and dark themes
+                  </p>
+                </div>
+                <Switch
+                  checked={darkMode}
+                  onCheckedChange={toggleDarkMode}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Privacy Settings */}
           <Card className="bg-slate-800 border-slate-700">
@@ -171,30 +230,6 @@ const Settings = () => {
                     updateSettings({ email_notifications: checked })
                   }
                   disabled={saving}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Appearance Settings */}
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-white">
-                {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                <span>Appearance</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-white">Dark mode</Label>
-                  <p className="text-sm text-slate-400">
-                    Switch between light and dark themes
-                  </p>
-                </div>
-                <Switch
-                  checked={darkMode}
-                  onCheckedChange={toggleDarkMode}
                 />
               </div>
             </CardContent>
