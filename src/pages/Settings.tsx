@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { Moon, Sun, Mail, MessageSquare, Shield } from 'lucide-react';
+import { Moon, Sun, Mail, Shield } from 'lucide-react';
 
 interface UserSettings {
   allow_messages_from_strangers: boolean;
@@ -105,27 +105,27 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center text-white">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100 dark:from-elegant-900 dark:via-elegant-800 dark:to-elegant-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-3xl font-bold text-white">Settings</h1>
 
           {/* Privacy Settings */}
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-white">
                 <Shield className="h-5 w-5" />
                 <span>Privacy Settings</span>
               </CardTitle>
@@ -133,8 +133,8 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Allow messages from strangers</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <Label className="text-white">Allow messages from strangers</Label>
+                  <p className="text-sm text-slate-400">
                     Let users who don't follow you send you private messages
                   </p>
                 </div>
@@ -150,9 +150,9 @@ const Settings = () => {
           </Card>
 
           {/* Notification Settings */}
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-white">
                 <Mail className="h-5 w-5" />
                 <span>Notifications</span>
               </CardTitle>
@@ -160,8 +160,8 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Email notifications</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <Label className="text-white">Email notifications</Label>
+                  <p className="text-sm text-slate-400">
                     Receive email notifications about messages and activities
                   </p>
                 </div>
@@ -177,9 +177,9 @@ const Settings = () => {
           </Card>
 
           {/* Appearance Settings */}
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-white">
                 {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 <span>Appearance</span>
               </CardTitle>
@@ -187,8 +187,8 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Dark mode</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <Label className="text-white">Dark mode</Label>
+                  <p className="text-sm text-slate-400">
                     Switch between light and dark themes
                   </p>
                 </div>
@@ -201,7 +201,7 @@ const Settings = () => {
           </Card>
 
           {/* Copyright */}
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-slate-400">
             © 2024 LingoConnect. All rights reserved.
           </div>
         </div>

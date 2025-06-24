@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import MessageInput from '@/components/MessageInput';
 
@@ -115,30 +114,30 @@ const Messages = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading messages...</div>
+          <div className="text-center text-white">Loading messages...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="grid md:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
           {/* Conversations List */}
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle>Messages</CardTitle>
+              <CardTitle className="text-white">Messages</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="space-y-2">
                 {conversations.length === 0 ? (
-                  <div className="p-4 text-center text-muted-foreground">
+                  <div className="p-4 text-center text-slate-400">
                     No conversations yet
                   </div>
                 ) : (
@@ -147,23 +146,23 @@ const Messages = () => {
                       key={conversation.id}
                       className={`p-3 cursor-pointer transition-colors ${
                         selectedConversation === conversation.id
-                          ? 'bg-accent/20'
-                          : 'hover:bg-elegant-50'
+                          ? 'bg-slate-700'
+                          : 'hover:bg-slate-700'
                       }`}
                       onClick={() => setSelectedConversation(conversation.id)}
                     >
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={conversation.other_participant.avatar_url} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-slate-700 text-white">
                             {conversation.other_participant.full_name?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">
+                          <p className="font-medium truncate text-white">
                             {conversation.other_participant.full_name}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-slate-400">
                             {new Date(conversation.updated_at).toLocaleDateString()}
                           </p>
                         </div>
@@ -178,7 +177,7 @@ const Messages = () => {
           {/* Messages Area */}
           <div className="md:col-span-2">
             {selectedConversation ? (
-              <Card className="h-full flex flex-col">
+              <Card className="h-full flex flex-col bg-slate-800 border-slate-700">
                 <CardContent className="flex-1 p-4 overflow-y-auto">
                   <div className="space-y-4">
                     {messages.map((message) => (
@@ -191,8 +190,8 @@ const Messages = () => {
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                             message.sender_id === user?.id
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-elegant-100'
+                              ? 'bg-slate-600 text-white'
+                              : 'bg-slate-700 text-white'
                           }`}
                         >
                           {message.gif_url ? (
@@ -212,13 +211,13 @@ const Messages = () => {
                     ))}
                   </div>
                 </CardContent>
-                <div className="p-4 border-t">
+                <div className="p-4 border-t border-slate-700">
                   <MessageInput onSendMessage={handleSendMessage} />
                 </div>
               </Card>
             ) : (
-              <Card className="h-full flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
+              <Card className="h-full flex items-center justify-center bg-slate-800 border-slate-700">
+                <div className="text-center text-slate-400">
                   <p>Select a conversation to start messaging</p>
                 </div>
               </Card>

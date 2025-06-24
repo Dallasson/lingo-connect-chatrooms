@@ -79,8 +79,24 @@ const Room = () => {
         variant: "destructive",
       });
       navigate('/rooms');
-    } else {
-      setRoom(data);
+    } else if (data) {
+      // Transform the data to match RoomData interface
+      const roomData: RoomData = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        host_id: data.host_id,
+        language: {
+          name: data.languages.name,
+          flag_emoji: data.languages.flag_emoji,
+        },
+        profiles: {
+          full_name: data.profiles.full_name,
+          avatar_url: data.profiles.avatar_url,
+          country: data.profiles.country,
+        }
+      };
+      setRoom(roomData);
     }
     setLoading(false);
   };
@@ -97,8 +113,18 @@ const Room = () => {
 
     if (error) {
       console.error('Error fetching participants:', error);
-    } else {
-      setParticipants(data || []);
+    } else if (data) {
+      // Transform and type-cast the participants data
+      const typedParticipants: Participant[] = data.map(p => ({
+        user_id: p.user_id,
+        role: p.role as 'host' | 'co_host' | 'speaker' | 'audience',
+        profiles: {
+          full_name: p.profiles?.full_name || 'Unknown',
+          avatar_url: p.profiles?.avatar_url,
+          country: p.profiles?.country,
+        }
+      }));
+      setParticipants(typedParticipants);
     }
   };
 
@@ -123,10 +149,10 @@ const Room = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading room...</div>
+          <div className="text-center text-white">Loading room...</div>
         </div>
       </div>
     );
@@ -134,10 +160,10 @@ const Room = () => {
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Room not found</div>
+          <div className="text-center text-white">Room not found</div>
         </div>
       </div>
     );
@@ -148,31 +174,31 @@ const Room = () => {
   const isHost = user?.id === room.host_id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-6">
         {/* Room Header */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-slate-800 border-slate-700">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="text-4xl">{room.language.flag_emoji}</div>
                 <div>
-                  <h1 className="text-2xl font-bold">{room.name}</h1>
-                  <p className="text-muted-foreground">{room.description}</p>
-                  <Badge variant="secondary" className="mt-2">
+                  <h1 className="text-2xl font-bold text-white">{room.name}</h1>
+                  <p className="text-slate-300">{room.description}</p>
+                  <Badge variant="secondary" className="mt-2 bg-slate-700 text-white">
                     {room.language.name}
                   </Badge>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-700">
                   <Users className="h-4 w-4 mr-2" />
                   {participants.length}
                 </Button>
                 {isHost && (
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-700">
                     <Settings className="h-4 w-4" />
                   </Button>
                 )}
@@ -186,21 +212,21 @@ const Room = () => {
         </Card>
 
         {/* Speakers Section */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-slate-800 border-slate-700">
           <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Speakers</h2>
+            <h2 className="text-lg font-semibold mb-4 text-white">Speakers</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Generate 8 speaker slots */}
               {Array.from({ length: 8 }, (_, index) => {
                 const speaker = speakers[index];
                 return (
-                  <div key={index} className="flex flex-col items-center p-4 border-2 border-dashed border-elegant-200 rounded-lg">
+                  <div key={index} className="flex flex-col items-center p-4 border-2 border-dashed border-slate-600 rounded-lg">
                     {speaker ? (
                       <>
                         <div className="relative">
                           <Avatar className="h-16 w-16">
                             <AvatarImage src={speaker.profiles.avatar_url} />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-slate-700 text-white">
                               {speaker.profiles.full_name?.charAt(0) || 'U'}
                             </AvatarFallback>
                           </Avatar>
@@ -210,7 +236,7 @@ const Room = () => {
                             </div>
                           )}
                         </div>
-                        <p className="text-sm font-medium mt-2 text-center">
+                        <p className="text-sm font-medium mt-2 text-center text-white">
                           {speaker.profiles.full_name}
                         </p>
                         <Badge variant={speaker.role === 'host' ? 'default' : 'secondary'} className="text-xs mt-1">
@@ -219,10 +245,10 @@ const Room = () => {
                       </>
                     ) : (
                       <>
-                        <div className="h-16 w-16 rounded-full bg-elegant-100 flex items-center justify-center">
-                          <Users className="h-8 w-8 text-elegant-400" />
+                        <div className="h-16 w-16 rounded-full bg-slate-700 flex items-center justify-center">
+                          <Users className="h-8 w-8 text-slate-400" />
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">Empty seat</p>
+                        <p className="text-sm text-slate-400 mt-2">Empty seat</p>
                       </>
                     )}
                   </div>
@@ -233,16 +259,16 @@ const Room = () => {
         </Card>
 
         {/* Audience Section */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-slate-800 border-slate-700">
           <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Audience ({audience.length})</h2>
+            <h2 className="text-lg font-semibold mb-4 text-white">Audience ({audience.length})</h2>
             <div className="flex flex-wrap gap-3">
               {audience.map((member) => (
                 <div key={member.user_id} className="flex items-center space-x-2">
                   <div className="relative">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={member.profiles.avatar_url} />
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className="text-xs bg-slate-700 text-white">
                         {member.profiles.full_name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
@@ -252,7 +278,7 @@ const Room = () => {
                       </div>
                     )}
                   </div>
-                  <span className="text-sm">{member.profiles.full_name}</span>
+                  <span className="text-sm text-white">{member.profiles.full_name}</span>
                 </div>
               ))}
             </div>
@@ -265,7 +291,7 @@ const Room = () => {
             size="lg"
             variant={isMuted ? "outline" : "default"}
             onClick={toggleMute}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 border-slate-600 text-white hover:bg-slate-700"
           >
             {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             <span>{isMuted ? 'Unmute' : 'Mute'}</span>

@@ -14,7 +14,7 @@
     --popover: 255 255 255;
     --popover-foreground: 15 23 42;
 
-    --primary: 71 85 105;
+    --primary: 30 41 59;
     --primary-foreground: 248 250 252;
 
     --secondary: 241 245 249;
@@ -23,7 +23,7 @@
     --muted: 248 250 252;
     --muted-foreground: 100 116 139;
 
-    --accent: 251 146 60;
+    --accent: 30 41 59;
     --accent-foreground: 255 255 255;
 
     --destructive: 239 68 68;
@@ -31,18 +31,18 @@
 
     --border: 226 232 240;
     --input: 226 232 240;
-    --ring: 71 85 105;
+    --ring: 30 41 59;
 
     --radius: 0.5rem;
 
     --sidebar-background: 255 255 255;
     --sidebar-foreground: 15 23 42;
-    --sidebar-primary: 71 85 105;
+    --sidebar-primary: 30 41 59;
     --sidebar-primary-foreground: 248 250 252;
     --sidebar-accent: 241 245 249;
     --sidebar-accent-foreground: 15 23 42;
     --sidebar-border: 226 232 240;
-    --sidebar-ring: 71 85 105;
+    --sidebar-ring: 30 41 59;
   }
 
   .dark {
@@ -64,8 +64,8 @@
     --muted: 51 65 85;
     --muted-foreground: 148 163 184;
 
-    --accent: 251 146 60;
-    --accent-foreground: 15 23 42;
+    --accent: 51 65 85;
+    --accent-foreground: 248 250 252;
 
     --destructive: 239 68 68;
     --destructive-foreground: 255 255 255;
@@ -97,7 +97,7 @@
 
 @layer components {
   .gradient-text {
-    @apply bg-gradient-to-r from-elegant-600 to-elegant-800 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-darkblue-600 to-darkblue-800 bg-clip-text text-transparent;
   }
   
   .glass-effect {

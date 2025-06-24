@@ -16,21 +16,21 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white/90 backdrop-blur-sm border-b border-elegant-200 sticky top-0 z-50 dark:bg-elegant-900/90 dark:border-elegant-700">
+    <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-elegant-600 to-elegant-700 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">LC</span>
             </div>
-            <span className="font-bold text-xl text-elegant-900 dark:text-elegant-100">LingoConnect</span>
+            <span className="font-bold text-xl text-white">LingoConnect</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/rooms" className="text-elegant-600 hover:text-elegant-800 font-medium dark:text-elegant-300 dark:hover:text-elegant-100">
+            <Link to="/rooms" className="text-slate-300 hover:text-white font-medium">
               Rooms
             </Link>
-            <Link to="/contact" className="text-elegant-600 hover:text-elegant-800 font-medium dark:text-elegant-300 dark:hover:text-elegant-100">
+            <Link to="/contact" className="text-slate-300 hover:text-white font-medium">
               Contact
             </Link>
           </nav>
@@ -39,35 +39,35 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-slate-700 text-white">
                         {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="text-white hover:bg-slate-700">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/messages')}>
+                  <DropdownMenuItem onClick={() => navigate('/messages')} className="text-white hover:bg-slate-700">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     <span>Messages</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/rooms')}>
+                  <DropdownMenuItem onClick={() => navigate('/rooms')} className="text-white hover:bg-slate-700">
                     <Users className="mr-2 h-4 w-4" />
                     <span>Rooms</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DropdownMenuItem onClick={() => navigate('/settings')} className="text-white hover:bg-slate-700">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
+                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-white hover:bg-slate-700">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -76,10 +76,10 @@ const Header = () => {
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/login">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" className="text-white hover:bg-slate-800">Sign In</Button>
                 </Link>
                 <Link to="/signup">
-                  <Button>Get Started</Button>
+                  <Button className="bg-slate-700 hover:bg-slate-600 text-white">Get Started</Button>
                 </Link>
               </div>
             )}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,7 @@ const Profile = () => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [followers, setFollowers] = useState<any[]>([]);
   const [following, setFollowing] = useState<any[]>([]);
 
@@ -157,17 +159,25 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
+    setUploading(true);
+    
     try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      console.log('Uploading file:', filePath);
+
       // Upload to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
+        console.error('Upload error:', uploadError);
         throw uploadError;
       }
 
@@ -176,6 +186,8 @@ const Profile = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', data.publicUrl);
+
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
@@ -183,6 +195,7 @@ const Profile = () => {
         .eq('id', user.id);
 
       if (updateError) {
+        console.error('Update error:', updateError);
         throw updateError;
       }
 
@@ -198,6 +211,8 @@ const Profile = () => {
         description: "Failed to upload image. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -228,10 +243,10 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center text-white">Loading...</div>
         </div>
       </div>
     );
@@ -239,25 +254,25 @@ const Profile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Profile not found</div>
+          <div className="text-center text-white">Profile not found</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-elegant-50 via-white to-elegant-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Profile Header */}
-          <Card>
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-2xl">My Profile</CardTitle>
+              <CardTitle className="text-2xl text-white">My Profile</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSave} className="space-y-6">
@@ -265,15 +280,20 @@ const Profile = () => {
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-20 w-20">
                     <AvatarImage src={profile.avatar_url} />
-                    <AvatarFallback className="text-lg">
+                    <AvatarFallback className="text-lg bg-slate-700 text-white">
                       {profile.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-2">
                     <Label htmlFor="avatar-upload" className="cursor-pointer">
-                      <Button type="button" variant="outline" className="flex items-center space-x-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="flex items-center space-x-2 border-slate-600 text-white hover:bg-slate-700"
+                        disabled={uploading}
+                      >
                         <Upload className="h-4 w-4" />
-                        <span>Change Photo</span>
+                        <span>{uploading ? 'Uploading...' : 'Change Photo'}</span>
                       </Button>
                     </Label>
                     <input
@@ -282,8 +302,9 @@ const Profile = () => {
                       accept="image/*"
                       onChange={handleImageUpload}
                       className="hidden"
+                      disabled={uploading}
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-400">
                       JPG, PNG or GIF (max 5MB)
                     </p>
                   </div>
@@ -292,27 +313,28 @@ const Profile = () => {
                 {/* Basic Info */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName" className="text-white">Full Name</Label>
                     <Input
                       id="fullName"
                       value={profile.full_name || ''}
                       onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
                       placeholder="Enter your full name"
+                      className="bg-slate-700 border-slate-600 text-white"
                     />
                   </div>
                   
                   <div>
-                    <Label>Country</Label>
+                    <Label className="text-white">Country</Label>
                     <Select
                       value={profile.country || ''}
                       onValueChange={(value) => setProfile({ ...profile, country: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                         <SelectValue placeholder="Select your country" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-700 border-slate-600">
                         {countries.map((country) => (
-                          <SelectItem key={country.code} value={country.name}>
+                          <SelectItem key={country.code} value={country.name} className="text-white hover:bg-slate-600">
                             {country.flag} {country.name}
                           </SelectItem>
                         ))}
@@ -322,29 +344,30 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="birthday">Birthday</Label>
+                  <Label htmlFor="birthday" className="text-white">Birthday</Label>
                   <Input
                     id="birthday"
                     type="date"
                     value={profile.birthday || ''}
                     onChange={(e) => setProfile({ ...profile, birthday: e.target.value })}
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
 
                 {/* Language Preferences */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label>Native Language</Label>
+                    <Label className="text-white">Native Language</Label>
                     <Select
                       value={profile.native_language_id || ''}
                       onValueChange={(value) => setProfile({ ...profile, native_language_id: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                         <SelectValue placeholder="Select your native language" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-700 border-slate-600">
                         {languages.map((lang) => (
-                          <SelectItem key={lang.id} value={lang.id}>
+                          <SelectItem key={lang.id} value={lang.id} className="text-white hover:bg-slate-600">
                             {lang.flag_emoji} {lang.name}
                           </SelectItem>
                         ))}
@@ -353,17 +376,17 @@ const Profile = () => {
                   </div>
 
                   <div>
-                    <Label>Learning Language</Label>
+                    <Label className="text-white">Learning Language</Label>
                     <Select
                       value={profile.learning_language_id || ''}
                       onValueChange={(value) => setProfile({ ...profile, learning_language_id: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                         <SelectValue placeholder="Select language you're learning" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-700 border-slate-600">
                         {languages.map((lang) => (
-                          <SelectItem key={lang.id} value={lang.id}>
+                          <SelectItem key={lang.id} value={lang.id} className="text-white hover:bg-slate-600">
                             {lang.flag_emoji} {lang.name}
                           </SelectItem>
                         ))}
@@ -372,7 +395,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <Button type="submit" disabled={saving} className="w-full">
+                <Button type="submit" disabled={saving} className="w-full bg-slate-700 hover:bg-slate-600">
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </form>
@@ -381,9 +404,9 @@ const Profile = () => {
 
           {/* Followers/Following Section */}
           <div className="grid md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-white">
                   <Users className="h-5 w-5" />
                   <span>Followers ({followers.length})</span>
                 </CardTitle>
@@ -391,17 +414,17 @@ const Profile = () => {
               <CardContent>
                 <div className="space-y-3">
                   {followers.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">No followers yet</p>
+                    <p className="text-slate-400 text-center py-4">No followers yet</p>
                   ) : (
                     followers.map((follower) => (
                       <div key={follower.follower_id} className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={follower.profiles?.avatar_url} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-slate-700 text-white">
                             {follower.profiles?.full_name?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{follower.profiles?.full_name}</span>
+                        <span className="font-medium text-white">{follower.profiles?.full_name}</span>
                       </div>
                     ))
                   )}
@@ -409,9 +432,9 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-white">
                   <UserPlus className="h-5 w-5" />
                   <span>Following ({following.length})</span>
                 </CardTitle>
@@ -419,17 +442,17 @@ const Profile = () => {
               <CardContent>
                 <div className="space-y-3">
                   {following.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">Not following anyone yet</p>
+                    <p className="text-slate-400 text-center py-4">Not following anyone yet</p>
                   ) : (
                     following.map((follow) => (
                       <div key={follow.following_id} className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={follow.profiles?.avatar_url} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-slate-700 text-white">
                             {follow.profiles?.full_name?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{follow.profiles?.full_name}</span>
+                        <span className="font-medium text-white">{follow.profiles?.full_name}</span>
                       </div>
                     ))
                   )}
@@ -439,15 +462,15 @@ const Profile = () => {
           </div>
 
           {/* Danger Zone */}
-          <Card className="border-destructive">
+          <Card className="border-destructive bg-slate-800">
             <CardHeader>
               <CardTitle className="text-destructive">Danger Zone</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Delete Account</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-white">Delete Account</p>
+                  <p className="text-sm text-slate-400">
                     Once you delete your account, there is no going back. Please be certain.
                   </p>
                 </div>
