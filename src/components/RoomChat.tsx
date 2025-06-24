@@ -73,7 +73,7 @@ const RoomChat = ({ roomId }: RoomChatProps) => {
       .from('room_messages')
       .select(`
         *,
-        profiles (full_name, avatar_url)
+        profiles!sender_id (full_name, avatar_url)
       `)
       .eq('room_id', roomId)
       .order('created_at', { ascending: true });
@@ -81,7 +81,20 @@ const RoomChat = ({ roomId }: RoomChatProps) => {
     if (error) {
       console.error('Error fetching messages:', error);
     } else {
-      setMessages(data || []);
+      // Transform the data to match our Message interface
+      const transformedMessages = data?.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        sender_id: msg.sender_id,
+        room_id: msg.room_id,
+        message_type: msg.message_type as 'text' | 'image' | 'gif',
+        created_at: msg.created_at,
+        profiles: {
+          full_name: msg.profiles?.full_name || 'Unknown User',
+          avatar_url: msg.profiles?.avatar_url
+        }
+      })) || [];
+      setMessages(transformedMessages);
     }
   };
 

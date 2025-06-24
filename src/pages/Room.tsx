@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { Mic, MicOff, Users, Settings, LogOut } from 'lucide-react';
 import Header from '@/components/Header';
+import RoomControls from '@/components/RoomControls';
+import RoomChat from '@/components/RoomChat';
 import { countries } from '@/data/countries';
 
 interface RoomData {
@@ -178,9 +181,13 @@ const Room = () => {
     return country?.flag || '🌍';
   };
 
+  const handleCloseRoom = () => {
+    navigate('/rooms');
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-white">Loading room...</div>
@@ -191,7 +198,7 @@ const Room = () => {
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-white">Room not found</div>
@@ -205,7 +212,7 @@ const Room = () => {
   const isHost = user?.id === room.host_id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-6">
@@ -242,88 +249,109 @@ const Room = () => {
           </CardContent>
         </Card>
 
-        {/* Speakers Section */}
-        <Card className="mb-6 bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 text-white">Speakers</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }, (_, index) => {
-                const speaker = speakers[index];
-                return (
-                  <div key={index} className="flex flex-col items-center p-4 border-2 border-dashed border-slate-600 rounded-lg">
-                    {speaker ? (
-                      <>
-                        <div className="relative">
-                          <Avatar className="h-16 w-16">
-                            <AvatarImage src={speaker.profiles.avatar_url} />
-                            <AvatarFallback className="bg-slate-700 text-white">
-                              {speaker.profiles.full_name?.charAt(0) || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="absolute -bottom-1 -left-1 text-sm">
-                            {getCountryFlag(speaker.profiles.country)}
-                          </div>
-                        </div>
-                        <p className="text-sm font-medium mt-2 text-center text-white">
-                          {speaker.profiles.full_name}
-                        </p>
-                        <Badge variant={speaker.role === 'host' ? 'default' : 'secondary'} className="text-xs mt-1">
-                          {speaker.role === 'host' ? 'Host' : speaker.role === 'co_host' ? 'Co-Host' : 'Speaker'}
-                        </Badge>
-                      </>
-                    ) : (
-                      <>
-                        <div className="h-16 w-16 rounded-full bg-slate-700 flex items-center justify-center">
-                          <Users className="h-8 w-8 text-slate-400" />
-                        </div>
-                        <p className="text-sm text-slate-400 mt-2">Empty seat</p>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Audience Section */}
-        <Card className="mb-6 bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4 text-white">Audience ({audience.length})</h2>
-            <div className="flex flex-wrap gap-3">
-              {audience.map((member) => (
-                <div key={member.user_id} className="flex flex-col items-center space-y-1">
-                  <div className="relative">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={member.profiles.avatar_url} />
-                      <AvatarFallback className="text-xs bg-slate-700 text-white">
-                        {member.profiles.full_name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -bottom-1 -left-1 text-xs">
-                      {getCountryFlag(member.profiles.country)}
-                    </div>
-                  </div>
-                  <span className="text-xs text-white text-center max-w-[60px] truncate">
-                    {member.profiles.full_name}
-                  </span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main content area */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Speakers Section */}
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold mb-4 text-white">Speakers</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Array.from({ length: 8 }, (_, index) => {
+                    const speaker = speakers[index];
+                    return (
+                      <div key={index} className="flex flex-col items-center p-4 border-2 border-dashed border-slate-600 rounded-lg">
+                        {speaker ? (
+                          <>
+                            <div className="relative">
+                              <Avatar className="h-16 w-16">
+                                <AvatarImage src={speaker.profiles.avatar_url} />
+                                <AvatarFallback className="bg-slate-700 text-white">
+                                  {speaker.profiles.full_name?.charAt(0) || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="absolute -bottom-1 -left-1 text-sm">
+                                {getCountryFlag(speaker.profiles.country)}
+                              </div>
+                            </div>
+                            <p className="text-sm font-medium mt-2 text-center text-white">
+                              {speaker.profiles.full_name}
+                            </p>
+                            <Badge variant={speaker.role === 'host' ? 'default' : 'secondary'} className="text-xs mt-1">
+                              {speaker.role === 'host' ? 'Host' : speaker.role === 'co_host' ? 'Co-Host' : 'Speaker'}
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            <div className="h-16 w-16 rounded-full bg-slate-700 flex items-center justify-center">
+                              <Users className="h-8 w-8 text-slate-400" />
+                            </div>
+                            <p className="text-sm text-slate-400 mt-2">Empty seat</p>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Controls */}
-        <div className="flex justify-center">
-          <Button
-            size="lg"
-            variant={isMuted ? "outline" : "default"}
-            onClick={toggleMute}
-            className="flex items-center space-x-2 border-slate-600 text-white hover:bg-slate-700"
-          >
-            {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-          </Button>
+            {/* Audience Section */}
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold mb-4 text-white">Audience ({audience.length})</h2>
+                <div className="flex flex-wrap gap-3">
+                  {audience.map((member) => (
+                    <div key={member.user_id} className="flex flex-col items-center space-y-1">
+                      <div className="relative">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={member.profiles.avatar_url} />
+                          <AvatarFallback className="text-xs bg-slate-700 text-white">
+                            {member.profiles.full_name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute -bottom-1 -left-1 text-xs">
+                          {getCountryFlag(member.profiles.country)}
+                        </div>
+                      </div>
+                      <span className="text-xs text-white text-center max-w-[60px] truncate">
+                        {member.profiles.full_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Host Controls */}
+            {isHost && (
+              <RoomControls
+                roomId={roomId!}
+                isHost={isHost}
+                participants={participants}
+                onParticipantUpdate={fetchParticipants}
+                onCloseRoom={handleCloseRoom}
+              />
+            )}
+
+            {/* Controls */}
+            <div className="flex justify-center">
+              <Button
+                size="lg"
+                variant={isMuted ? "outline" : "default"}
+                onClick={toggleMute}
+                className="flex items-center space-x-2 border-slate-600 text-white hover:bg-slate-700"
+              >
+                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Chat sidebar */}
+          <div className="lg:col-span-1">
+            <RoomChat roomId={roomId!} />
+          </div>
         </div>
       </div>
     </div>
