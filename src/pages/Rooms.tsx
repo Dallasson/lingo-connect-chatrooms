@@ -1,155 +1,86 @@
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import RoomCard from '@/components/RoomCard';
-import CreateRoomDialog from '@/components/CreateRoomDialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Plus, Users, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Header from '@/components/Header';
+import CreateRoomDialog from '@/components/CreateRoomDialog';
+import { useLanguage } from '@/hooks/useLanguage';
+import { countries } from '@/data/countries';
 
 interface Room {
   id: string;
   name: string;
   description?: string;
-  language: {
+  host_id: string;
+  language_id: string;
+  max_participants: number;
+  created_at: string;
+  languages: {
     name: string;
     flag_emoji: string;
-    code: string;
   };
-  host: {
+  profiles: {
     full_name: string;
     avatar_url?: string;
+    country?: string;
   };
-  participant_count: number;
-  max_participants: number;
-  is_active: boolean;
+  participant_count?: number;
 }
 
 const Rooms = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [selectedLanguage, setSelectedLanguage] = useState(searchParams.get('language') || 'all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const { t } = useLanguage();
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [languages, setLanguages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
-    fetchLanguages();
-    fetchRooms();
-  }, []);
-
-  useEffect(() => {
-    fetchRooms();
-  }, [selectedLanguage, searchQuery]);
-
-  const fetchLanguages = async () => {
-    const { data, error } = await supabase
-      .from('languages')
-      .select('*')
-      .order('name');
-
-    if (error) {
-      console.error('Error fetching languages:', error);
-    } else {
-      setLanguages(data || []);
-    }
-  };
-
-  const fetchRooms = async () => {
-    setLoading(true);
-    
-    let query = supabase
-      .from('rooms')
-      .select(`
-        *,
-        languages (name, flag_emoji, code),
-        profiles (full_name, avatar_url),
-        room_participants (count)
-      `)
-      .eq('is_active', true);
-
-    if (selectedLanguage !== 'all') {
-      const selectedLang = languages.find(lang => lang.code === selectedLanguage);
-      if (selectedLang) {
-        query = query.eq('language_id', selectedLang.id);
-      }
-    }
-
-    if (searchQuery) {
-      query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching rooms:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load rooms",
-        variant: "destructive",
-      });
-    } else {
-      const formattedRooms = data?.map((room: any) => ({
-        id: room.id,
-        name: room.name,
-        description: room.description,
-        language: {
-          name: room.languages.name,
-          flag_emoji: room.languages.flag_emoji,
-          code: room.languages.code,
-        },
-        host: {
-          full_name: room.profiles.full_name || 'Unknown Host',
-          avatar_url: room.profiles.avatar_url,
-        },
-        participant_count: room.room_participants?.length || 0,
-        max_participants: room.max_participants,
-        is_active: room.is_active,
-      })) || [];
-      
-      setRooms(formattedRooms);
-    }
-    
-    setLoading(false);
-  };
-
-  const handleJoinRoom = async (roomId: string) => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to join a room",
-        variant: "destructive",
-      });
       navigate('/login');
       return;
     }
+    fetchRooms();
+  }, [user, navigate]);
 
-    // Check if user is already in the room
-    const { data: existingParticipant } = await supabase
-      .from('room_participants')
-      .select('*')
-      .eq('room_id', roomId)
-      .eq('user_id', user.id)
-      .single();
+  const fetchRooms = async () => {
+    const { data, error } = await supabase
+      .from('rooms')
+      .select(`
+        *,
+        languages (name, flag_emoji),
+        profiles (full_name, avatar_url, country),
+        room_participants (count)
+      `)
+      .order('created_at', { ascending: false });
 
-    if (existingParticipant) {
-      toast({
-        title: "Already in Room",
-        description: "You are already a participant in this room",
-      });
-      return;
+    if (error) {
+      console.error('Error fetching rooms:', error);
+    } else {
+      const roomsWithCount = data?.map(room => ({
+        ...room,
+        participant_count: room.room_participants?.length || 0
+      })) || [];
+      setRooms(roomsWithCount);
     }
+    setLoading(false);
+  };
 
-    // Add user to room participants
+  const getCountryFlag = (countryName?: string) => {
+    if (!countryName) return '🌍';
+    const country = countries.find(c => c.name === countryName);
+    return country?.flag || '🌍';
+  };
+
+  const joinRoom = async (roomId: string) => {
+    if (!user) return;
+    
     const { error } = await supabase
       .from('room_participants')
       .insert({
@@ -160,153 +91,127 @@ const Rooms = () => {
 
     if (error) {
       console.error('Error joining room:', error);
-      toast({
-        title: "Error",
-        description: "Failed to join room",
-        variant: "destructive",
-      });
     } else {
-      toast({
-        title: "Success",
-        description: "Successfully joined the room!",
-      });
-      // Navigate to room page (to be implemented)
       navigate(`/room/${roomId}`);
     }
   };
 
-  const handleCreateRoom = () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to create a room",
-        variant: "destructive",
-      });
-      navigate('/login');
-      return;
-    }
-    setShowCreateRoom(true);
-  };
-
-  const filteredRooms = rooms.filter(room => {
-    const matchesLanguage = selectedLanguage === 'all' || room.language.code === selectedLanguage;
-    const matchesSearch = !searchQuery || 
-      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.language.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesLanguage && matchesSearch;
-  });
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-white">Loading rooms...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lingo-50 via-white to-lingo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <div className="lg:w-80">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-              <h2 className="text-xl font-semibold mb-6">Find Your Perfect Room</h2>
-              
-              {/* Search */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Search Rooms</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search by name or language..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('rooms')}</h1>
+            <p className="text-slate-300">Join language exchange rooms and practice with native speakers</p>
+          </div>
+          <Button 
+            onClick={() => setShowCreateDialog(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('create_room')}
+          </Button>
+        </div>
 
-              {/* Language Filter */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Language</label>
-                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Languages</SelectItem>
-                    {languages.map((lang) => (
-                      <SelectItem key={lang.id} value={lang.code}>
-                        {lang.flag_emoji} {lang.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {rooms.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <Globe className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">No rooms available</h3>
+              <p className="text-slate-400 mb-6">Be the first to create a language exchange room!</p>
               <Button 
-                onClick={handleCreateRoom}
-                className="w-full bg-lingo-500 hover:bg-lingo-600"
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Room
+                <Plus className="h-4 w-4 mr-2" />
+                {t('create_room')}
               </Button>
             </div>
-          </div>
-
-          {/* Room Grid */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold">Language Rooms</h1>
-              <div className="text-sm text-muted-foreground">
-                {filteredRooms.length} rooms available
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">⏳</div>
-                <h3 className="text-xl font-semibold mb-2">Loading rooms...</h3>
-                <p className="text-muted-foreground">
-                  Please wait while we fetch the latest rooms
-                </p>
-              </div>
-            ) : filteredRooms.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-xl font-semibold mb-2">No rooms found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or language filter, or create your own room!
-                </p>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                {filteredRooms.map((room) => (
-                  <RoomCard
-                    key={room.id}
-                    room={{
-                      id: room.id,
-                      name: room.name,
-                      language: room.language.name,
-                      languageFlag: room.language.flag_emoji,
-                      currentUsers: room.participant_count,
-                      maxUsers: room.max_participants,
-                      host: {
-                        name: room.host.full_name,
-                        avatar: room.host.avatar_url,
-                      },
-                      speakers: Math.min(room.participant_count, 8), // Assuming max 8 speakers
-                      isLive: room.is_active,
-                    }}
-                    onJoinRoom={handleJoinRoom}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          ) : (
+            rooms.map((room) => (
+              <Card key={room.id} className="bg-slate-800 border-slate-700 hover:bg-slate-750 transition-colors">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">{room.languages.flag_emoji}</div>
+                      <div>
+                        <CardTitle className="text-white text-lg">{room.name}</CardTitle>
+                        <Badge variant="secondary" className="bg-blue-900 text-blue-100 text-xs">
+                          {room.languages.name}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-slate-400 text-sm">
+                      <Users className="h-4 w-4 mr-1" />
+                      {room.participant_count}/{room.max_participants}
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0">
+                  {room.description && (
+                    <p className="text-slate-300 text-sm mb-4 line-clamp-2">
+                      {room.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="relative">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={room.profiles.avatar_url} />
+                          <AvatarFallback className="bg-slate-700 text-white text-xs">
+                            {room.profiles.full_name?.charAt(0) || 'H'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute -bottom-1 -left-1 text-xs">
+                          {getCountryFlag(room.profiles.country)}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-slate-300 text-xs">Host</p>
+                        <p className="text-white text-sm font-medium">
+                          {room.profiles.full_name}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={() => joinRoom(room.id)}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      disabled={room.participant_count >= room.max_participants}
+                    >
+                      {room.participant_count >= room.max_participants ? 'Full' : t('join_room')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </div>
 
       <CreateRoomDialog 
-        open={showCreateRoom}
-        onOpenChange={setShowCreateRoom}
-        onRoomCreated={fetchRooms}
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+        onRoomCreated={() => {
+          setShowCreateDialog(false);
+          fetchRooms();
+        }}
       />
     </div>
   );
